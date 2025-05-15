@@ -9,6 +9,8 @@ import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import org.apache.http.util.EntityUtils
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 object StockerQuoteHttpUtil {
 
@@ -52,14 +54,28 @@ object StockerQuoteHttpUtil {
                     }
                 }
             }
+
+            StockerQuoteProvider.Binance -> {
+                if (marketType == StockerMarketType.Crypto ) {
+                    URLEncoder.encode( codes.joinToString(
+                        separator = ",",
+                        prefix = "[",
+                        postfix = "]"
+                    ) { code ->
+                        "\"${code.uppercase()}USDT\""
+                    }, StandardCharsets.UTF_8.toString())
+                } else {
+
+                }
+            }
         }
 
         val url = "${quoteProvider.host}${codesParam}"
-        val httpGet = HttpGet(url)
-        if (quoteProvider == StockerQuoteProvider.SINA) {
-            httpGet.setHeader("Referer", "https://finance.sina.com.cn") // Sina API requires this header
-        }
         return try {
+            val httpGet = HttpGet(url)
+            if (quoteProvider == StockerQuoteProvider.SINA) {
+                httpGet.setHeader("Referer", "https://finance.sina.com.cn") // Sina API requires this header
+            }
             val response = httpClientPool.execute(httpGet)
             val responseText = EntityUtils.toString(response.entity, "UTF-8")
             StockerQuoteParser.parseQuoteResponse(quoteProvider, marketType, responseText)
@@ -67,6 +83,13 @@ object StockerQuoteHttpUtil {
             log.warn(e)
             emptyList()
         }
+    }
+    fun toUnicode(input: String): String {
+        return input.flatMap { char ->
+            char.toString().encodeToByteArray().map {
+                "\\u%04x".format(it.toInt())
+            }
+        }.joinToString("")
     }
 
     fun validateCode(
@@ -102,6 +125,14 @@ object StockerQuoteHttpUtil {
                 val response = httpClientPool.execute(httpGet)
                 val responseText = EntityUtils.toString(response.entity, "UTF-8")
                 return !responseText.startsWith("v_pv_none_match")
+            }
+
+            StockerQuoteProvider.Binance -> {
+                val url = "${quoteProvider.host}?symbols=${code.uppercase()}"
+                val httpGet = HttpGet(url)
+                val response = httpClientPool.execute(httpGet)
+                val responseText = EntityUtils.toString(response.entity, "UTF-8")
+                return !responseText.startsWith("{\"code\":-1121")
             }
         }
     }

@@ -14,7 +14,6 @@ enum class StockerQuoteProvider(
             StockerMarketType.AShare to "",
             StockerMarketType.HKStocks to "hk",
             StockerMarketType.USStocks to "gb_",
-            StockerMarketType.Crypto to "btc_"
         )
     ),
 
@@ -30,12 +29,26 @@ enum class StockerQuoteProvider(
             StockerMarketType.HKStocks to "hk",
             StockerMarketType.USStocks to "us",
         )
+    ),
+
+    /**
+     * Tencent API
+     */
+    Binance(
+        title = "Binance",
+        host = "https://data-api.binance.vision/api/v3/ticker/24hr?symbols=",
+        suggestHost = "https://baidu.com",
+        providerPrefixMap = mapOf(
+            StockerMarketType.Crypto to "btc_"
+        )
     );
+
 
     fun fromTitle(title: String): StockerQuoteProvider {
         return when (title) {
             SINA.title -> SINA
             TENCENT.title -> TENCENT
+            Binance.title -> Binance
             else -> SINA
         }
     }

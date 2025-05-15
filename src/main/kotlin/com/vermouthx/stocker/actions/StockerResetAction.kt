@@ -19,6 +19,7 @@ class StockerResetAction : AnAction() {
         setting.aShareList.clear()
         setting.hkStocksList.clear()
         setting.usStocksList.clear()
+        setting.cryptoList.clear()
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread {

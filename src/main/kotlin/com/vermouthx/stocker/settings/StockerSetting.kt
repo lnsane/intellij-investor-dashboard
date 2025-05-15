@@ -27,11 +27,25 @@ class StockerSetting : PersistentStateComponent<StockerSettingState> {
             log.info("Stocker updated to $value")
         }
 
+    var currentMarketType: StockerMarketType
+        get() = myState.currentMarketType
+        set(value) {
+            myState.currentMarketType = value
+            log.info("Stocker current market type switched to ${value.title}")
+        }
+
     var quoteProvider: StockerQuoteProvider
         get() = myState.quoteProvider
         set(value) {
             myState.quoteProvider = value
             log.info("Stocker quote provider switched to ${value.title}")
+        }
+
+    var quoteCryptoProvider: StockerQuoteProvider
+        get() = myState.quoteCryptoProvider
+        set(value) {
+            myState.quoteCryptoProvider = value
+            log.info("Stocker quote Crypto provider switched to ${value.title}")
         }
 
     var quoteColorPattern: StockerQuoteColorPattern

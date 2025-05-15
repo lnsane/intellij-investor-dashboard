@@ -3,6 +3,7 @@ package com.vermouthx.stocker
 import com.intellij.openapi.application.ApplicationManager
 import com.vermouthx.stocker.enums.StockerMarketIndex
 import com.vermouthx.stocker.enums.StockerMarketType
+import com.vermouthx.stocker.enums.StockerQuoteProvider
 import com.vermouthx.stocker.listeners.StockerQuoteReloadNotifier.*
 import com.vermouthx.stocker.listeners.StockerQuoteUpdateNotifier.*
 import com.vermouthx.stocker.settings.StockerSetting
@@ -44,10 +45,10 @@ class StockerApp {
             schedulePeriod,
             TimeUnit.SECONDS
         )
-//        scheduledExecutorService.scheduleAtFixedRate(
-//            createQuoteUpdateThread(StockerMarketType.Crypto, setting.cryptoList),
-//            scheduleInitialDelay, schedulePeriod, TimeUnit.SECONDS
-//        )
+        scheduledExecutorService.scheduleAtFixedRate(
+            createQuoteUpdateThread(StockerMarketType.Crypto, setting.cryptoList),
+            scheduleInitialDelay, schedulePeriod, TimeUnit.SECONDS
+        )
         scheduledExecutorService.scheduleAtFixedRate(
             createAllQuoteUpdateThread(), scheduleInitialDelay, schedulePeriod, TimeUnit.SECONDS
         )
@@ -77,16 +78,16 @@ class StockerApp {
         return Runnable {
             val quoteProvider = setting.quoteProvider
             val allStockQuotes = listOf(
-                StockerQuoteHttpUtil.get(StockerMarketType.AShare, quoteProvider, setting.aShareList),
-                StockerQuoteHttpUtil.get(StockerMarketType.HKStocks, quoteProvider, setting.hkStocksList),
-                StockerQuoteHttpUtil.get(StockerMarketType.USStocks, quoteProvider, setting.usStocksList),
-//                StockerQuoteHttpUtil.get(StockerMarketType.Crypto, quoteProvider, setting.cryptoList)
+                StockerQuoteHttpUtil.get(StockerMarketType.AShare, StockerQuoteProvider.SINA, setting.aShareList),
+                StockerQuoteHttpUtil.get(StockerMarketType.HKStocks, StockerQuoteProvider.SINA, setting.hkStocksList),
+                StockerQuoteHttpUtil.get(StockerMarketType.USStocks, StockerQuoteProvider.SINA, setting.usStocksList),
+                StockerQuoteHttpUtil.get(StockerMarketType.Crypto, StockerQuoteProvider.Binance, setting.cryptoList)
             ).flatten()
             val allStockIndices = listOf(
-                StockerQuoteHttpUtil.get(StockerMarketType.AShare, quoteProvider, StockerMarketIndex.CN.codes),
-                StockerQuoteHttpUtil.get(StockerMarketType.HKStocks, quoteProvider, StockerMarketIndex.HK.codes),
-                StockerQuoteHttpUtil.get(StockerMarketType.USStocks, quoteProvider, StockerMarketIndex.US.codes),
-//                StockerQuoteHttpUtil.get(StockerMarketType.Crypto, quoteProvider, StockerMarketIndex.Crypto.codes)
+                StockerQuoteHttpUtil.get(StockerMarketType.AShare, StockerQuoteProvider.SINA, StockerMarketIndex.CN.codes),
+                StockerQuoteHttpUtil.get(StockerMarketType.HKStocks, StockerQuoteProvider.SINA, StockerMarketIndex.HK.codes),
+                StockerQuoteHttpUtil.get(StockerMarketType.USStocks, StockerQuoteProvider.SINA, StockerMarketIndex.US.codes),
+                StockerQuoteHttpUtil.get(StockerMarketType.Crypto, StockerQuoteProvider.Binance, StockerMarketIndex.Crypto.codes)
             ).flatten()
             val publisher = messageBus.syncPublisher(STOCK_ALL_QUOTE_UPDATE_TOPIC)
             publisher.syncQuotes(allStockQuotes, setting.allStockListSize)
@@ -107,32 +108,32 @@ class StockerApp {
         val size = stockCodeList.size
         when (marketType) {
             StockerMarketType.AShare -> {
-                val quotes = StockerQuoteHttpUtil.get(marketType, quoteProvider, stockCodeList)
-                val indices = StockerQuoteHttpUtil.get(marketType, quoteProvider, StockerMarketIndex.CN.codes)
+                val quotes = StockerQuoteHttpUtil.get(marketType, StockerQuoteProvider.SINA, stockCodeList)
+                val indices = StockerQuoteHttpUtil.get(marketType, StockerQuoteProvider.SINA, StockerMarketIndex.CN.codes)
                 val publisher = messageBus.syncPublisher(STOCK_CN_QUOTE_UPDATE_TOPIC)
                 publisher.syncQuotes(quotes, size)
                 publisher.syncIndices(indices)
             }
 
             StockerMarketType.HKStocks -> {
-                val quotes = StockerQuoteHttpUtil.get(marketType, quoteProvider, stockCodeList)
-                val indices = StockerQuoteHttpUtil.get(marketType, quoteProvider, StockerMarketIndex.HK.codes)
+                val quotes = StockerQuoteHttpUtil.get(marketType, StockerQuoteProvider.SINA, stockCodeList)
+                val indices = StockerQuoteHttpUtil.get(marketType, StockerQuoteProvider.SINA, StockerMarketIndex.HK.codes)
                 val publisher = messageBus.syncPublisher(STOCK_HK_QUOTE_UPDATE_TOPIC)
                 publisher.syncQuotes(quotes, size)
                 publisher.syncIndices(indices)
             }
 
             StockerMarketType.USStocks -> {
-                val quotes = StockerQuoteHttpUtil.get(marketType, quoteProvider, stockCodeList)
-                val indices = StockerQuoteHttpUtil.get(marketType, quoteProvider, StockerMarketIndex.US.codes)
+                val quotes = StockerQuoteHttpUtil.get(marketType, StockerQuoteProvider.SINA, stockCodeList)
+                val indices = StockerQuoteHttpUtil.get(marketType, StockerQuoteProvider.SINA, StockerMarketIndex.US.codes)
                 val publisher = messageBus.syncPublisher(STOCK_US_QUOTE_UPDATE_TOPIC)
                 publisher.syncQuotes(quotes, size)
                 publisher.syncIndices(indices)
             }
 
             StockerMarketType.Crypto -> {
-                val quotes = StockerQuoteHttpUtil.get(marketType, quoteProvider, stockCodeList)
-                val indices = StockerQuoteHttpUtil.get(marketType, quoteProvider, StockerMarketIndex.Crypto.codes)
+                val quotes = StockerQuoteHttpUtil.get(marketType, StockerQuoteProvider.Binance, stockCodeList)
+                val indices = StockerQuoteHttpUtil.get(marketType, StockerQuoteProvider.Binance, StockerMarketIndex.Crypto.codes)
                 val publisher = messageBus.syncPublisher(CRYPTO_QUOTE_UPDATE_TOPIC)
                 publisher.syncQuotes(quotes, size)
                 publisher.syncIndices(indices)

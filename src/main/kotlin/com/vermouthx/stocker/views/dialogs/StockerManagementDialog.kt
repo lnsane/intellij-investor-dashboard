@@ -13,6 +13,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.vermouthx.stocker.StockerAppManager
 import com.vermouthx.stocker.entities.StockerQuote
 import com.vermouthx.stocker.enums.StockerMarketType
+import com.vermouthx.stocker.enums.StockerQuoteProvider
 import com.vermouthx.stocker.settings.StockerSetting
 import com.vermouthx.stocker.utils.StockerQuoteHttpUtil
 import java.awt.BorderLayout
@@ -39,7 +40,7 @@ class StockerManagementDialog(val project: Project?) : DialogWrapper(project) {
         tabbedPane.add("CN", createTabContent(0))
         tabbedPane.add("HK", createTabContent(1))
         tabbedPane.add("US", createTabContent(2))
-//        tabbedPane.add("Crypto", createTabContent(3))
+        tabbedPane.add("Crypto", createTabContent(3))
         tabbedPane.addChangeListener {
             currentMarketSelection = when (tabbedPane.selectedIndex) {
                 0 -> {
@@ -53,9 +54,9 @@ class StockerManagementDialog(val project: Project?) : DialogWrapper(project) {
                 2 -> {
                     StockerMarketType.USStocks
                 }
-//                3 -> {
-//                    StockerMarketType.Crypto
-//                }
+                3 -> {
+                    StockerMarketType.Crypto
+                }
                 else -> return@addChangeListener
             }
         }
@@ -63,7 +64,7 @@ class StockerManagementDialog(val project: Project?) : DialogWrapper(project) {
         val aShareListModel = DefaultListModel<StockerQuote>()
         aShareListModel.addAll(
             StockerQuoteHttpUtil.get(
-                StockerMarketType.AShare, setting.quoteProvider, setting.aShareList
+                StockerMarketType.AShare, StockerQuoteProvider.SINA, setting.aShareList
             )
         )
         currentSymbols[StockerMarketType.AShare] = aShareListModel
@@ -74,7 +75,7 @@ class StockerManagementDialog(val project: Project?) : DialogWrapper(project) {
         val hkStocksListModel = DefaultListModel<StockerQuote>()
         hkStocksListModel.addAll(
             StockerQuoteHttpUtil.get(
-                StockerMarketType.HKStocks, setting.quoteProvider, setting.hkStocksList
+                StockerMarketType.HKStocks, StockerQuoteProvider.SINA, setting.hkStocksList
             )
         )
         currentSymbols[StockerMarketType.HKStocks] = hkStocksListModel
@@ -85,12 +86,23 @@ class StockerManagementDialog(val project: Project?) : DialogWrapper(project) {
         val usStocksListModel = DefaultListModel<StockerQuote>()
         usStocksListModel.addAll(
             StockerQuoteHttpUtil.get(
-                StockerMarketType.USStocks, setting.quoteProvider, setting.usStocksList
+                StockerMarketType.USStocks, StockerQuoteProvider.SINA, setting.usStocksList
             )
         )
         currentSymbols[StockerMarketType.USStocks] = usStocksListModel
         tabMap[2]?.let { pane ->
             renderTabPane(pane, usStocksListModel)
+        }
+
+        val cryptoListModel = DefaultListModel<StockerQuote>()
+        cryptoListModel.addAll(
+            StockerQuoteHttpUtil.get(
+                StockerMarketType.Crypto, StockerQuoteProvider.Binance, setting.cryptoList
+            )
+        )
+        currentSymbols[StockerMarketType.Crypto] = cryptoListModel
+        tabMap[3]?.let { pane ->
+            renderTabPane(pane, cryptoListModel)
         }
 
         tabbedPane.selectedIndex = 0
@@ -116,6 +128,9 @@ class StockerManagementDialog(val project: Project?) : DialogWrapper(project) {
                         }
                         currentSymbols[StockerMarketType.USStocks]?.let { symbols ->
                             setting.usStocksList = symbols.elements().asSequence().map { it.code }.toMutableList()
+                        }
+                        currentSymbols[StockerMarketType.Crypto]?.let { symbols ->
+                            setting.cryptoList = symbols.elements().asSequence().map { it.code }.toMutableList()
                         }
                         myApplication.schedule()
                     }

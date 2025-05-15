@@ -10,6 +10,7 @@ import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
 import com.vermouthx.stocker.StockerAppManager
 import com.vermouthx.stocker.entities.StockerSuggestion
+import com.vermouthx.stocker.enums.StockerQuoteProvider
 import com.vermouthx.stocker.enums.StockerStockOperation
 import com.vermouthx.stocker.settings.StockerSetting
 import com.vermouthx.stocker.utils.StockerActionUtil

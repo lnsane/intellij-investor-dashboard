@@ -9,9 +9,13 @@ import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
+import com.intellij.ui.content.ContentManagerEvent
+import com.intellij.ui.content.ContentManagerListener
 import com.vermouthx.stocker.StockerApp
 import com.vermouthx.stocker.StockerAppManager
 import com.vermouthx.stocker.enums.StockerMarketType
+import com.vermouthx.stocker.enums.StockerQuoteProvider
+import com.vermouthx.stocker.enums.StockerQuoteProvider.Binance
 import com.vermouthx.stocker.listeners.StockerQuoteDeleteListener
 import com.vermouthx.stocker.listeners.StockerQuoteDeleteNotifier.*
 import com.vermouthx.stocker.listeners.StockerQuoteReloadListener
@@ -27,6 +31,7 @@ class StockerToolWindow : ToolWindowFactory {
     private lateinit var allView: StockerSimpleToolWindow
     private lateinit var tabViewMap: Map<StockerMarketType, StockerSimpleToolWindow>
     private lateinit var myApplication: StockerApp
+    private val setting = StockerSetting.instance
 
     private fun injectPopupMenu(project: Project?, window: StockerSimpleToolWindow?) {
         if (window != null) {
@@ -95,9 +100,9 @@ class StockerToolWindow : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val contentManager = toolWindow.contentManager
         val contentFactory = ContentFactory.getInstance()
-        val allContent =
-            contentFactory.createContent(allView.component, "ALL", false).also { injectPopupMenu(project, allView) }
-        contentManager.addContent(allContent)
+//        val allContent =
+//            contentFactory.createContent(allView.component, "ALL", false).also { injectPopupMenu(project, allView) }
+//        contentManager.addContent(allContent)
         val aShareContent = contentFactory.createContent(
             tabViewMap[StockerMarketType.AShare]?.component, StockerMarketType.AShare.title, false
         ).also {
@@ -116,17 +121,51 @@ class StockerToolWindow : ToolWindowFactory {
             injectPopupMenu(project, tabViewMap[StockerMarketType.USStocks])
         }
         contentManager.addContent(usStocksContent)
-//        val cryptoContent = contentFactory.createContent(
-//            tabViewMap[StockerMarketType.Crypto]?.component,
-//            StockerMarketType.Crypto.title,
-//            false
-//        ).also {
-//            injectPopupMenu(project, tabViewMap[StockerMarketType.Crypto])
-//        }
-//        contentManager.addContent(cryptoContent)
+        val cryptoContent = contentFactory.createContent(
+            tabViewMap[StockerMarketType.Crypto]?.component,
+            StockerMarketType.Crypto.title,
+            false
+        ).also {
+            injectPopupMenu(project, tabViewMap[StockerMarketType.Crypto])
+        }
+        contentManager.addContent(cryptoContent)
         this.subscribeMessage()
         StockerAppManager.myApplicationMap[project] = myApplication
         myApplication.schedule()
+
+        toolWindow.contentManager.addContentManagerListener(object : ContentManagerListener {
+            override fun selectionChanged(event: ContentManagerEvent) {
+                val selectedContent = event.content
+                val tabTitle = selectedContent?.displayName ?: "Unknown"
+                println("Switched to tab: $tabTitle")
+
+                // 根据 tab 名称或其他属性来判断当前是哪个市场
+                when (tabTitle) {
+                    "ALL" -> {
+                        setting.quoteProvider = StockerQuoteProvider.SINA
+                        setting.quoteCryptoProvider = StockerQuoteProvider.SINA
+                    }
+                    StockerMarketType.AShare.title -> {
+                        setting.quoteProvider = StockerQuoteProvider.SINA
+                        setting.quoteCryptoProvider = StockerQuoteProvider.SINA
+                    }
+                    StockerMarketType.HKStocks.title -> {
+                        setting.quoteProvider = StockerQuoteProvider.SINA
+                        setting.quoteCryptoProvider = StockerQuoteProvider.SINA
+                    }
+                    StockerMarketType.USStocks.title -> {
+                        setting.quoteProvider = StockerQuoteProvider.SINA
+                        setting.quoteCryptoProvider = StockerQuoteProvider.SINA
+                    }
+                    StockerMarketType.Crypto.title -> {
+                        setting.quoteProvider = Binance
+                        setting.quoteCryptoProvider = Binance
+                    }
+                }
+            }
+        })
+
+
     }
 
     private fun subscribeMessage() {

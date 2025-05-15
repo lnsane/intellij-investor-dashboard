@@ -16,16 +16,26 @@ class StockerSettingWindow : BoundConfigurable("Stocker") {
 
     private var colorPattern: StockerQuoteColorPattern = setting.quoteColorPattern
     private var quoteProviderTitle: String = setting.quoteProvider.title
+    private var quoteCryptoProviderTitle: String = setting.quoteCryptoProvider.title
 
     override fun createPanel(): DialogPanel {
         return panel {
-            group("General") {
-                row("Provider: ") {
-                    comboBox(
-                        StockerQuoteProvider.values()
-                            .map { it.title }).bindItem(::quoteProviderTitle.toNullableProperty())
-                }
-            }
+//            group("General") {
+//                row("Provider: ") {
+//                    comboBox(
+//                        StockerQuoteProvider.values()
+//                            .map { it.title }
+//                            .filter { !it.contains("Binance", ignoreCase = true) })
+//                        .bindItem(::quoteProviderTitle.toNullableProperty())
+//                }
+//                row("Crypto: ") {
+//                    comboBox(
+//                        StockerQuoteProvider.values()
+//                            .map { it.title }
+//                            .filter { it.contains("Binance", ignoreCase = true) })
+//                        .bindItem(::quoteCryptoProviderTitle.toNullableProperty())
+//                }
+//            }
 
             group("Appearance") {
                 buttonsGroup("Color Pattern: ") {
@@ -43,14 +53,17 @@ class StockerSettingWindow : BoundConfigurable("Stocker") {
 
             onApply {
                 setting.quoteProvider = setting.quoteProvider.fromTitle(quoteProviderTitle)
+                setting.quoteCryptoProvider = setting.quoteCryptoProvider.fromTitle(quoteCryptoProviderTitle)
                 setting.quoteColorPattern = colorPattern
             }
             onIsModified {
                 quoteProviderTitle != setting.quoteProvider.title
+                quoteCryptoProviderTitle != setting.quoteCryptoProvider.title
                 colorPattern != setting.quoteColorPattern
             }
             onReset {
                 quoteProviderTitle = setting.quoteProvider.title
+                quoteCryptoProviderTitle = setting.quoteCryptoProvider.title
                 colorPattern = setting.quoteColorPattern
             }
         }

@@ -24,7 +24,14 @@ object StockerSuggestHttpUtil {
     }
 
     fun suggest(key: String, provider: StockerQuoteProvider): List<StockerSuggestion> {
-        val url = "${provider.suggestHost}$key"
+        var url = ""
+        if (provider == StockerQuoteProvider.SINA) {
+            url = "${provider.suggestHost}$key"
+        } else if (provider == StockerQuoteProvider.TENCENT) {
+            url =  "${provider.suggestHost}$key"
+        } else if (provider == StockerQuoteProvider.Binance) {
+            url = provider.suggestHost
+        }
         val httpGet = HttpGet(url)
         if (provider == StockerQuoteProvider.SINA) {
             httpGet.setHeader("Referer", "https://finance.sina.com.cn") // Sina API requires this header
@@ -42,6 +49,13 @@ object StockerSuggestHttpUtil {
                     parseTencentSuggestion(responseText)
                 }
 
+                StockerQuoteProvider.Binance -> {
+                    val responseText = EntityUtils.toString(response.entity, "UTF-8")
+                    if (key == "600") {
+                        return emptyList()
+                    }
+                    parseCryptoSuggestion(key)
+                }
             }
         } catch (e: Exception) {
             log.warn(e)
@@ -118,6 +132,15 @@ object StockerSuggestHttpUtil {
                 "us" -> result.add(StockerSuggestion(code.split(".")[0].uppercase(), name, StockerMarketType.USStocks))
             }
         }
+        return result
+    }
+
+    private fun parseCryptoSuggestion(responseText: String): List<StockerSuggestion> {
+        if (responseText.isEmpty()) {
+            return emptyList()
+        }
+        val result = mutableListOf<StockerSuggestion>()
+        result.add(StockerSuggestion(responseText,"" , StockerMarketType.Crypto))
         return result
     }
 }

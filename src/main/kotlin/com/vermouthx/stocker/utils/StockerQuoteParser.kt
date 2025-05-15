@@ -1,13 +1,20 @@
 package com.vermouthx.stocker.utils
 
+import com.google.gson.Gson
+import com.intellij.openapi.diagnostic.Logger
 import com.vermouthx.stocker.entities.StockerQuote
+import com.vermouthx.stocker.entities.StockerSuggestion
+import com.vermouthx.stocker.entities.TickerInfo
 import com.vermouthx.stocker.enums.StockerMarketType
 import com.vermouthx.stocker.enums.StockerQuoteProvider
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 object StockerQuoteParser {
+
+    private val log = Logger.getInstance(javaClass)
 
     private fun Double.twoDigits(): Double {
         return (this * 100.0).roundToInt() / 100.0
@@ -19,10 +26,44 @@ object StockerQuoteParser {
         return when (provider) {
             StockerQuoteProvider.SINA -> parseSinaQuoteResponse(marketType, responseText)
             StockerQuoteProvider.TENCENT -> parseTencentQuoteResponse(marketType, responseText)
+            StockerQuoteProvider.Binance -> parseBinanceQuoteResponse(marketType, responseText)
         }
     }
 
+    private fun parseBinanceQuoteResponse(
+        marketType: StockerMarketType,
+        responseText: String
+    ): List<StockerQuote> {
+        if (marketType != StockerMarketType.Crypto) {
+            return emptyList()
+        }
+        val today = LocalDate.now()
+        val formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日")
+        val formattedDate = today.format(formatter)
+        log.info("Binance quote response date time  : $responseText + $formattedDate")
+        val result = mutableListOf<StockerQuote>()
+        val tickerList: List<TickerInfo> = Gson().fromJson(responseText, Array<TickerInfo>::class.java).toList()
+        tickerList.forEach { user ->
+            result.add(StockerQuote(
+                code = user.symbol.substringBefore("USDT"),
+                name = user.symbol.substringBefore("USDT"),
+                current = user.lastPrice,
+                opening = user.openPrice,
+                close = 0.0,
+                low = user.lowPrice,
+                high = user.highPrice,
+                change = user.priceChange,
+                percentage = user.priceChangePercent,
+                updateAt = ""
+            ))
+        }
+        return result
+    }
+
     private fun parseSinaQuoteResponse(marketType: StockerMarketType, responseText: String): List<StockerQuote> {
+        if (marketType == StockerMarketType.Crypto) {
+            return emptyList()
+        }
         val regex = Regex("var hq_str_(\\w+?)=\"(.*?)\";")
         return responseText.split("\n").asSequence().filter { text -> text.isNotEmpty() }.map { text ->
             val matchResult = regex.find(text)
@@ -136,6 +177,9 @@ object StockerQuoteParser {
     }
 
     private fun parseTencentQuoteResponse(marketType: StockerMarketType, responseText: String): List<StockerQuote> {
+        if (marketType == StockerMarketType.Crypto) {
+            return emptyList()
+        }
         return responseText.split("\n").asSequence().filter { text -> text.isNotEmpty() }.map { text ->
             val code = when (marketType) {
                 StockerMarketType.AShare -> text.subSequence(2, text.indexOfFirst { c -> c == '=' })
