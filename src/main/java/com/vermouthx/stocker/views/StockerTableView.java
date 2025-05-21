@@ -80,7 +80,7 @@ public class StockerTableView {
             String name = Objects.requireNonNull(cbIndex.getSelectedItem()).toString();
             for (StockerQuote index : indices) {
                 if (index.getName().equals(name)) {
-                    lbIndexValue.setText(Double.toString(index.getCurrent()));
+                    lbIndexValue.setText(index.getCurrent());
                     lbIndexExtent.setText(Double.toString(index.getChange()));
                     lbIndexPercent.setText(index.getPercentage() + "%");
                     double value = index.getPercentage();

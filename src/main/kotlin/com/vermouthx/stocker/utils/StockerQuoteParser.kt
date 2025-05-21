@@ -7,6 +7,7 @@ import com.vermouthx.stocker.entities.StockerSuggestion
 import com.vermouthx.stocker.entities.TickerInfo
 import com.vermouthx.stocker.enums.StockerMarketType
 import com.vermouthx.stocker.enums.StockerQuoteProvider
+import java.text.DecimalFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -44,10 +45,12 @@ object StockerQuoteParser {
         val result = mutableListOf<StockerQuote>()
         val tickerList: List<TickerInfo> = Gson().fromJson(responseText, Array<TickerInfo>::class.java).toList()
         tickerList.forEach { user ->
+            val formatter = DecimalFormat("0.####################")
+            val current = formatter.format(user.lastPrice)
             result.add(StockerQuote(
                 code = user.symbol.substringBefore("USDT"),
                 name = user.symbol.substringBefore("USDT"),
-                current = user.lastPrice,
+                current = current,
                 opening = user.openPrice,
                 close = 0.0,
                 low = user.lowPrice,
@@ -85,7 +88,7 @@ object StockerQuoteParser {
                     StockerQuote(
                         code = code,
                         name = name,
-                        current = current,
+                        current = current.toString(),
                         opening = opening,
                         close = close,
                         low = low,
@@ -113,7 +116,7 @@ object StockerQuoteParser {
                     StockerQuote(
                         code = code,
                         name = name,
-                        current = current,
+                        current = current.toString(),
                         opening = opening,
                         close = close,
                         low = low,
@@ -138,7 +141,7 @@ object StockerQuoteParser {
                     StockerQuote(
                         code = code,
                         name = name,
-                        current = current,
+                        current = current.toString(),
                         opening = opening,
                         close = close,
                         low = low,
@@ -162,7 +165,7 @@ object StockerQuoteParser {
                     StockerQuote(
                         code = code,
                         name = name,
-                        current = current,
+                        current = current.toString(),
                         opening = opening,
                         close = current,
                         low = low,
@@ -220,7 +223,7 @@ object StockerQuoteParser {
             StockerQuote(
                 code = code,
                 name = name,
-                current = current,
+                current = current.toString(),
                 opening = opening,
                 close = close,
                 low = low,

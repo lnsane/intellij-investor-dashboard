@@ -3,7 +3,7 @@ package com.vermouthx.stocker.entities
 data class StockerQuote(
     var code: String,
     var name: String,
-    var current: Double,
+    var current: String,
     var opening: Double,
     var close: Double,
     var low: Double,
