@@ -19,7 +19,7 @@ class StockerApp {
 
     private var scheduledExecutorService: ScheduledExecutorService = Executors.newScheduledThreadPool(4)
 
-    private var scheduleInitialDelay: Long = 3
+    private var scheduleInitialDelay: Long = 2
     private val schedulePeriod: Long = StockerSetting.instance.refreshInterval
 
     fun schedule() {
